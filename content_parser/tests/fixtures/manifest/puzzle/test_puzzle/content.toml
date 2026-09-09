@@ -1,0 +1,48 @@
+# Synthetic fixture manifest for `content_parser`'s integration test — no
+# real puzzle content. Mirrors the shape of a real `manifest/puzzle/<name>/
+# content.toml` (every grant kind, a hint with an inherited/purchased answer,
+# both inline and file-backed content/json) without depending on the actual
+# (git-ignored) hunt manifest.
+
+id = 1
+base_resource = 900
+title = "Synthetic Test Puzzle"
+
+[[contents]]
+grant = { inherit = 901 }
+content_file = "body.md"
+
+[[contents]]
+grant = { independent = 902 }
+content_file = "extra.md"
+
+[[data]]
+grant = { inherit = 903 }
+json = { hint_count = 2, tags = ["synthetic", "fixture"] }
+
+[[data]]
+grant = { independent = 904 }
+json = [2026-01-01T00:00:00.000, "synthetic inline value"]
+
+[[data]]
+grant = { independent = 905 }
+json_file = "data.json"
+
+[[hints]]
+grant = { inherit = 906 }
+title = "First hint"
+[hints.answer]
+grant = { purchase = 907 }
+content = "This is a synthetic answer for testing."
+
+[[hints]]
+grant = { independent = 908 }
+title = "Second hint"
+[hints.answer]
+grant = { purchase = 909 }
+content_file = "second_hint.html"
+
+[base_manifest]
+content = [["content-a", 901]]
+data = [["data-hint", 903]]
+hint = [["hint-a", 906]]

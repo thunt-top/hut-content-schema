@@ -1,0 +1,77 @@
+# Synthetic fixture manifest for `behavior_parser`'s example — no real
+# puzzle content. Mirrors the full shape of a real `manifest/puzzle/<name>/
+# content.toml` (see `content_parser`'s own fixture for the same convention)
+# without depending on the actual (git-ignored) hunt manifest.
+#
+# `behavior_parser` only reads `id`, `title`, `patch` and `answer` (see
+# `src/lib.rs`); `base_resource`, `contents`, `data`, `hints` and
+# `base_manifest` below belong to `content_parser` instead and are expected
+# to be silently ignored here.
+
+id = 1
+base_resource = 900
+title = "Synthetic Test Puzzle"
+
+[[contents]]
+grant = { inherit = 901 }
+content_file = "body.md"
+
+[[contents]]
+grant = { independent = 902 }
+content_file = "extra.md"
+
+[[data]]
+grant = { inherit = 903 }
+json = { hint_count = 2, tags = ["synthetic", "fixture"] }
+
+[[hints]]
+grant = { inherit = 906 }
+title = "First hint"
+[hints.answer]
+grant = { purchase = 907 }
+content = "This is a synthetic answer for testing."
+
+[[hints]]
+grant = { independent = 908 }
+title = "Second hint"
+[hints.answer]
+grant = { purchase = 909 }
+content_file = "second_hint.html"
+
+[base_manifest]
+content = [["content-a", 901]]
+data = [["data-hint", 903]]
+hint = [["hint-a", 906]]
+
+[[patch]]
+patch_id = 902
+[[patch.op]]
+Insert = ["content", "content-b", 902]
+
+[[patch]]
+patch_id = 908
+do_not_grant = true
+[[patch.op]]
+Insert = ["hint", "hint-z", 908]
+
+[[patch]]
+patch_id = 902
+cross_version = true
+[[patch.op]]
+Hide = "content-a"
+[[patch.op]]
+Replace = ["hint", "hint-a", 906, 908]
+
+[[answer]]
+answer = "more-content"
+message = "check for the extra content!"
+patch = [902]
+
+[[answer]]
+answer = "more-test"
+message = "check for the extra hint!"
+patch = [908]
+normalization = "trim_lowercase"
+solves = 1
+unlockes = [910]
+grants = [902]

@@ -1,0 +1,22 @@
+# Synthetic fixture — no real puzzle content. Only `id`/`title`/`patch`/
+# `answer` matter to `behavior_parser`; `base_resource`/`contents` below
+# belong to `content_parser` and are expected to be silently ignored here.
+
+id = 2
+base_resource = 200
+title = "Puzzle B"
+
+[[contents]]
+grant = { inherit = 201 }
+content = "unused by behavior_parser"
+
+[[patch]]
+patch_id = 202
+do_not_grant = true
+[[patch.op]]
+Hide = ["content", "content-a"]
+
+[[answer]]
+answer = "more-test"
+message = "check for the extra hint!"
+patch = [202]

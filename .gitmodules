@@ -1,0 +1,3 @@
+[submodule "manifest"]
+	path = manifest
+	url = git@github.com:thunt-top/hut-27-manifest.git
