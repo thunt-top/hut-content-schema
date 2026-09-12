@@ -280,7 +280,7 @@ impl PuzzleScope {
         let mut built: Vec<(ResourceRegistration, Encrypted)> = Vec::new();
 
         build(
-            "context",
+            "content",
             self.contents,
             &ctx,
             registry,
