@@ -60,7 +60,6 @@ name = "behavior_parser"
 version = "0.1.0"
 dependencies = [
  "serde",
- "sign-bound",
  "toml",
 ]
 
