@@ -56,7 +56,9 @@ impl PatchOp {
     }
 }
 
+/// One `[[patch]]` entry. Unknown keys are rejected (see `Answer`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Patch {
     pub patch_id: i32,
 

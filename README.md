@@ -39,16 +39,24 @@ standalone. It's a submodule of `hut_back`, mounted at `hut-content-schema/`.
   side spells out its tags. A tiny leaf crate with no
   dependency on anything else here, so both sides can take it without pulling
   in the other's concerns.
+- **`manifest_check/`** (binary + library) — the checks neither parser can
+  make alone, since each only sees its own half of a `content.toml`:
+  unknown *top-level* keys (every nested table belongs to one parser, which
+  rejects unknown keys there itself), duplicate puzzle ids, and
+  cross-references — an answer's `patch` names one of its puzzle's patches;
+  every resource id a patch, an answer's `grants` or `base_manifest`
+  mentions is defined by some puzzle's content; `unlocks`/`solves` name real
+  puzzles. CLI: `cargo run -p manifest_check -- --base manifest`. Not a
+  dependency of anything; CI-only.
 
-None of `behavior_parser`/`content_parser`/`content_crypto` has a path
+None of `behavior_parser`/`content_parser`/`content_crypto`/`manifest_check` has a path
 dependency on anything outside this repo (`hut-core`, `hut-content`,
 `hut-util`, ...) — the dependency runs the other way: `hut-core` and
 `hut-content` each depend inward on whichever leaf crate(s) they need. That's
 deliberate: it means the grammar of the hand-written manifest — both the
 behavior fields and the content fields — can be fully checked from inside
-this repo alone (`cargo test -p behavior_parser -p content_parser`, or
-against the real manifest with each crate's `--base` CLI), with nothing else
-checked out.
+this repo alone (`cargo test --workspace`, or against the real manifest
+with each `--base` CLI), with nothing else checked out.
 
 ## Content model (`content_parser`)
 
@@ -196,8 +204,10 @@ this repo's own tests don't need populated at all):
 - `cargo test -p content_parser` — `tests/build.rs`, building, encrypting,
   re-deriving keys, and decrypting against
   `tests/fixtures/manifest/`.
+- `cargo test -p manifest_check` — the top-level key and cross-reference
+  checks, against small inline manifests.
 
-Both parsers also ship a `--base <dir>` CLI that runs the same checks against
+All three also ship a `--base <dir>` CLI that runs the same checks against
 *any* manifest tree, real or not — this is what
 [`hut-27-manifest`](https://github.com/thunt-top/hut-27-manifest)'s own CI
 runs against the real content on every push (checking out this repo, but not
@@ -207,6 +217,7 @@ CI is running):
 ```bash
 cargo run -p behavior_parser -- --base <path-to-manifest> --out /dev/null
 cargo run -p content_parser -- --base <path-to-manifest>
+cargo run -p manifest_check -- --base <path-to-manifest>
 ```
 
 Since neither crate depends on anything outside this directory, both suites

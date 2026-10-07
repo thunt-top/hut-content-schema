@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["behavior_parser", "content_parser", "content_crypto"]
+members = ["behavior_parser", "content_parser", "content_crypto", "manifest_check"]

@@ -55,6 +55,10 @@ pub struct PuzzleScope {
 ///
 /// See [`crate::scope::config`] for how `content`/`content_file` and
 /// `json`/`json_file` are resolved.
+///
+/// Unlike the entry types below, this top-level table can't reject unknown
+/// keys itself: `behavior_parser` reads other keys from the same table.
+/// `manifest_check` checks the top level against both parsers' keys.
 #[derive(Deserialize)]
 pub struct PuzzleScopeConfig {
     pub id: i32,
@@ -85,6 +89,7 @@ pub struct PuzzleScopeConfig {
 /// hint = [["hint-a", 105]]
 /// ```
 #[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BaseManifestConfig {
     #[serde(default)]
     pub content: Vec<(String, i32)>,
@@ -119,6 +124,7 @@ pub struct BaseManifest {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ContentEntryConfig {
     pub grant: GrantConfig,
     pub content: Option<String>,
@@ -135,6 +141,7 @@ impl ContentEntryConfig {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct JsonEntryConfig {
     pub grant: GrantConfig,
     pub json: Option<toml::Value>,
@@ -151,6 +158,7 @@ impl JsonEntryConfig {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct HintEntryConfig {
     pub grant: GrantConfig,
     pub title: String,

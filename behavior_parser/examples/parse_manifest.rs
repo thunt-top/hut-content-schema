@@ -42,7 +42,7 @@ fn main() {
     );
     assert!(matches!(
         &behavior.patch[2].op[1],
-        PatchOp::Replace(PatchDomain::Content,name, from, to) if name == "hint-a" && *from == 906 && *to == 908
+        PatchOp::Replace(PatchDomain::Hint,name, from, to) if name == "hint-a" && *from == 906 && *to == 908
     ));
 
     assert_eq!(behavior.answer[0].answer, "more-content");
@@ -55,7 +55,7 @@ fn main() {
         Some("trim_lowercase")
     );
     assert_eq!(behavior.answer[1].solves, Some(1));
-    assert_eq!(behavior.answer[1].unlockes, vec![910]);
+    assert_eq!(behavior.answer[1].unlocks, vec![910]);
     assert_eq!(behavior.answer[1].grants, vec![902]);
 
     println!(

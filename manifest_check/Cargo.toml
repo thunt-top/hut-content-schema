@@ -1,0 +1,9 @@
+[package]
+name = "manifest_check"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+behavior_parser = { path = "../behavior_parser" }
+content_parser = { path = "../content_parser" }
+toml = "1.1.4"

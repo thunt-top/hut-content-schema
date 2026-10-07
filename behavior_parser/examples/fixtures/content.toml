@@ -58,7 +58,7 @@ Insert = ["hint", "hint-z", 908]
 patch_id = 902
 cross_version = true
 [[patch.op]]
-Hide = "content-a"
+Hide = ["content", "content-a"]
 [[patch.op]]
 Replace = ["hint", "hint-a", 906, 908]
 
@@ -73,5 +73,5 @@ message = "check for the extra hint!"
 patch = [908]
 normalization = "trim_lowercase"
 solves = 1
-unlockes = [910]
+unlocks = [910]
 grants = [902]
