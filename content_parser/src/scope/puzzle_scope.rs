@@ -6,6 +6,8 @@ use std::{
 use serde::Deserialize;
 use serde_json::{Value, json};
 
+use content_crypto::ScopeBranch;
+
 use crate::{
     resource::{
         BuiltArtifact, BuiltResource, ContentResource, EncryptContext, Encrypted, Grant, Hint,
@@ -272,9 +274,7 @@ impl PuzzleScope {
         registry: &mut R,
         seen: &mut HashSet<ResourceId>,
     ) -> Result<Vec<(ResourceRegistration, Encrypted)>, VersionRegistryError> {
-        let scope_ctx = EncryptContext::base(base_key, self.id).derive_ctx("Scope", self.id);
-
-        let ctx = scope_ctx.derive_ctx("ScopeDerive", self.id);
+        let ctx = EncryptContext::new(base_key, self.id, ScopeBranch::Derive);
 
         let mut inherit: HashMap<&'static str, Vec<(ResourceId, Value)>> = HashMap::new();
         let mut built: Vec<(ResourceRegistration, Encrypted)> = Vec::new();
@@ -332,7 +332,7 @@ impl PuzzleScope {
             }),
         };
 
-        let ctx = scope_ctx.derive_ctx("ScopeInherit", self.id);
+        let ctx = EncryptContext::new(base_key, self.id, ScopeBranch::Inherit);
         let scope_base_resource = scope_resource.build(&ctx, registry).await?;
 
         let BuiltArtifact::Encrypted { reg, enc } = scope_base_resource.artifact else {

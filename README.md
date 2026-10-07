@@ -34,7 +34,9 @@ standalone. It's a submodule of `hut_back`, mounted at `hut-content-schema/`.
 - **`content_crypto/`** — the key/path derivation (BLAKE3 `derive_key` +
   AES-256-GCM) that both `content_parser` (encrypting at publish time) and
   `hut-core` (deriving/decrypting at request time, see
-  `hut-core/src/api/resource.rs`) need identically. A tiny leaf crate with no
+  `hut-core/src/domain/crypto.rs`) need identically — including the
+  per-resource key chain itself (`scope_key` + `resource_key`), so neither
+  side spells out its tags. A tiny leaf crate with no
   dependency on anything else here, so both sides can take it without pulling
   in the other's concerns.
 
@@ -177,7 +179,7 @@ Content is gzip'd *before* encryption (ciphertext is incompressible, so
 compressing after would do nothing).
 
 `hut-core`'s `/resource/get` re-derives a resource's key the same way (see
-`hut-core/src/api/resource.rs`) to hand it to an eligible team, without ever
+`hut-core/src/domain/crypto.rs`) to hand it to an eligible team, without ever
 touching the plaintext itself — see
 [`hut-content/README.md`](../hut-content/README.md#why-the-content-is-encrypted-client-side)
 for why.

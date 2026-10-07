@@ -127,6 +127,86 @@ pub fn base_key(secret: impl AsRef<[u8]>) -> [u8; 32] {
     blake3::derive_key(CTX_BASE, secret.as_ref())
 }
 
+// ── The per-resource key chain ──────────────────────────────────────
+//
+// Every encrypted resource's key is derived from the root key in exactly
+// three steps:
+//
+//   base_key --"Scope"(scope_id)--> --"ScopeDerive"/"ScopeInherit"(scope_id)-->
+//     ScopeKey --"Indep"/"Purchase"(resource_id)--> resource key
+//
+// The publisher (`content_parser`) encrypts with it and `hut-core`
+// re-derives it to hand out decipher keys, so both go through
+// [`scope_key`] + [`resource_key`] rather than spelling the chain out
+// themselves. The tags are part of every published blob's key: changing
+// one (or the order) makes all existing content undecryptable.
+
+const TAG_SCOPE: &str = "Scope";
+
+/// Which of a scope's two key branches a resource hangs off.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScopeBranch {
+    /// The scope's own base resource.
+    Inherit,
+    /// Every other (content/data/hint) resource in the scope.
+    Derive,
+}
+
+impl ScopeBranch {
+    pub const fn tag(self) -> &'static str {
+        match self {
+            Self::Inherit => "ScopeInherit",
+            Self::Derive => "ScopeDerive",
+        }
+    }
+}
+
+/// How a resource's own key is labelled -- one per kind of grant that has
+/// a key of its own (an inherited resource has none; it's folded into its
+/// parent's plaintext instead).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResourceKeyKind {
+    /// Granted on its own (e.g. unlocked by a patch or an answer).
+    Independent,
+    /// Granted by purchasing it.
+    Purchase,
+}
+
+impl ResourceKeyKind {
+    pub const fn tag(self) -> &'static str {
+        match self {
+            Self::Independent => "Indep",
+            Self::Purchase => "Purchase",
+        }
+    }
+}
+
+/// A scope branch's key -- the first two steps of the chain. Only
+/// [`scope_key`] makes one, and only [`resource_key`] takes one, so the
+/// steps can't be skipped or reordered.
+#[derive(Clone, Copy)]
+pub struct ScopeKey([u8; 32]);
+
+/// Steps 1-2 of the chain: `base_key` (see [`base_key`]) down to
+/// `scope_id`'s `branch`. Returns the `(tag, id)` steps taken alongside
+/// the key, for callers that record a resource's derivation path.
+pub fn scope_key(
+    base_key: &[u8; 32],
+    scope_id: i32,
+    branch: ScopeBranch,
+) -> (ScopeKey, [(&'static str, i32); 2]) {
+    let path = [(TAG_SCOPE, scope_id), (branch.tag(), scope_id)];
+    let key = path
+        .iter()
+        .fold(*base_key, |key, (tag, id)| derive_key(&key, tag, *id));
+    (ScopeKey(key), path)
+}
+
+/// Step 3 of the chain: the AES key of `resource_id`, under `scope_key`.
+pub fn resource_key(scope_key: &ScopeKey, kind: ResourceKeyKind, resource_id: i32) -> [u8; 32] {
+    derive_key(&scope_key.0, kind.tag(), resource_id)
+}
+
 /// Encrypt one version's plaintext. Gzip *before* calling this — ciphertext is
 /// incompressible, so the CDN's own compression will do nothing for you.
 pub fn encrypt(key: &[u8; 32], plaintext: &[u8]) -> Vec<u8> {
@@ -170,4 +250,36 @@ pub fn decrypt(key: &[u8; 32], blob: &[u8]) -> Result<Vec<u8>, DecryptError> {
     cipher
         .decrypt(&nonce, sealed)
         .map_err(|_| DecryptError::Decrypt)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Pins the chain's tags and order against plain `derive_key` calls:
+    /// if this fails, every already-published blob just became
+    /// undecryptable.
+    #[test]
+    fn key_chain_is_stable() {
+        let base = base_key(b"key chain test secret");
+
+        for (branch, branch_tag) in [
+            (ScopeBranch::Derive, "ScopeDerive"),
+            (ScopeBranch::Inherit, "ScopeInherit"),
+        ] {
+            for (kind, kind_tag) in [
+                (ResourceKeyKind::Independent, "Indep"),
+                (ResourceKeyKind::Purchase, "Purchase"),
+            ] {
+                let manual = derive_key(
+                    &derive_key(&derive_key(&base, "Scope", 7), branch_tag, 7),
+                    kind_tag,
+                    42,
+                );
+                let (scope, path) = scope_key(&base, 7, branch);
+                assert_eq!(resource_key(&scope, kind, 42), manual);
+                assert_eq!(path, [("Scope", 7), (branch_tag, 7)]);
+            }
+        }
+    }
 }

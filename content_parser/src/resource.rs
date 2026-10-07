@@ -3,7 +3,9 @@ use std::borrow::Cow;
 use serde_json::{Value, json};
 use sign_bound::PositiveI32;
 
-use content_crypto::{derive_key, derive_url, encrypt};
+use content_crypto::{
+    ResourceKeyKind, ScopeBranch, ScopeKey, derive_url, encrypt, resource_key, scope_key,
+};
 
 use crate::{
     content_gzip::PrepareToEncrypt,
@@ -70,28 +72,31 @@ impl BuiltResource {
     }
 }
 
+/// One branch of a scope's key chain (see `content_crypto::scope_key`),
+/// which every resource built under it derives its own key from.
 pub struct EncryptContext {
-    derive_root: DerivedKey,
+    scope_key: ScopeKey,
+    scope_path: [(&'static str, i32); 2],
     pub scope_id: ScopeId,
 }
 
 impl EncryptContext {
-    pub fn base(base: [u8; 32], scope_id: ScopeId) -> Self {
+    pub fn new(base: [u8; 32], scope_id: ScopeId, branch: ScopeBranch) -> Self {
+        let (scope_key, scope_path) = scope_key(&base, scope_id.into(), branch);
         Self {
-            derive_root: DerivedKey::as_base(base),
+            scope_key,
+            scope_path,
             scope_id,
         }
     }
 
-    pub fn derive(&self, tag: &'static str, resource_id: impl Into<i32>) -> DerivedKey {
-        self.derive_root.derive(tag, resource_id.into())
-    }
-
-    pub fn derive_ctx(&self, tag: &'static str, resource_id: impl Into<i32>) -> Self {
-        let new_root = self.derive(tag, resource_id);
-        EncryptContext {
-            derive_root: new_root,
-            scope_id: self.scope_id,
+    pub fn derive(&self, kind: ResourceKeyKind, resource_id: impl Into<i32>) -> DerivedKey {
+        let resource_id = resource_id.into();
+        let mut path = self.scope_path.to_vec();
+        path.push((kind.tag(), resource_id));
+        DerivedKey {
+            path,
+            key: resource_key(&self.scope_key, kind, resource_id),
         }
     }
 }
@@ -114,15 +119,6 @@ pub struct DerivedKey {
 }
 
 impl DerivedKey {
-    pub fn as_base(key: [u8; 32]) -> DerivedKey {
-        DerivedKey { path: vec![], key }
-    }
-    pub fn derive(&self, tag: &'static str, id: i32) -> DerivedKey {
-        let key = derive_key(&self.key, tag, id);
-        let mut path = self.path.clone();
-        path.push((tag, id));
-        DerivedKey { path, key }
-    }
     pub fn encrypt(&self, plaintext: impl AsRef<[u8]>) -> (Vec<u8>, Vec<(&'static str, i32)>) {
         (encrypt(&self.key, plaintext.as_ref()), self.path.clone())
     }
@@ -135,8 +131,8 @@ impl Grant {
     fn derive_key(&self, ctx: &EncryptContext) -> Option<DerivedKey> {
         match self {
             Inherit(_) => return None,
-            Independent(x) => ctx.derive("Indep", *x),
-            Purchase(x) => ctx.derive("Purchase", *x),
+            Independent(x) => ctx.derive(ResourceKeyKind::Independent, *x),
+            Purchase(x) => ctx.derive(ResourceKeyKind::Purchase, *x),
         }
         .into()
     }
