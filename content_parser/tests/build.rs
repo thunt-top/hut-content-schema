@@ -7,10 +7,10 @@
 
 use std::{collections::HashSet, path::Path};
 
+use content_crypto::{decrypt, derive_key, derive_url};
 use content_parser::content_gzip::ungzip;
 use content_parser::scope::puzzle_scope::PuzzleScope;
 use content_parser::version_registry::MockVersionRegistry;
-use content_crypto::{decrypt, derive_key, derive_url};
 
 /// A fixed key, not read from `.env` or generated — keeps this test hermetic
 /// and reproducible regardless of the local environment.

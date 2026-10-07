@@ -24,10 +24,10 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use serde_json::json;
 
+use content_crypto::{decrypt, derive_key};
 use content_parser::content_gzip::ungzip;
 use content_parser::scope::puzzle_scope::PuzzleScope;
 use content_parser::version_registry::MockVersionRegistry;
-use content_crypto::{decrypt, derive_key};
 
 /// Matches `TEST_BASE_KEY` in `tests/build.rs`. Not required for
 /// correctness (any fixed key works here) -- kept identical so both files

@@ -282,4 +282,71 @@ mod tests {
             }
         }
     }
+
+    fn hex(bytes: &[u8]) -> String {
+        bytes.iter().map(|b| format!("{b:02x}")).collect()
+    }
+
+    /// Known-answer vectors: fixed inputs, outputs hard-coded. Unlike
+    /// [`key_chain_is_stable`], which compares the chain against
+    /// `derive_key` itself, this also pins `derive_key`, `base_key` and
+    /// `derive_url` -- their `CTX_*` contexts and how their input bytes are
+    /// laid out. If this fails, every already-published blob just became
+    /// undecryptable (or unreachable, for a URL); fix the code, not the
+    /// vectors.
+    ///
+    /// The values were cross-checked when added by deriving them by hand
+    /// from the documented layout (`key || u32_be(tag.len) || tag ||
+    /// i32_be(id)` under `CTX_KEY`, `key || i32_be(id)` under `CTX_PATH`)
+    /// with the `blake3` crate directly.
+    #[test]
+    fn known_answers() {
+        const SECRET: &[u8] = b"known-answer test secret";
+        const SCOPE: i32 = 3;
+        const RESOURCE: i32 = 1205;
+
+        let base = base_key(SECRET);
+        assert_eq!(
+            hex(&base),
+            "2909fd2aed65fbb8923023303b814d11cbb9784e0e9a4afd574a585c94418ed5"
+        );
+
+        let cases = [
+            (
+                ScopeBranch::Derive,
+                ResourceKeyKind::Independent,
+                "5785d9c97dfe19db90d55965c3fee36a189a57ab1f713e7488400ae8f19d2cdd",
+                "r47ddeqblgyv7o423bvfjbrrpu",
+            ),
+            (
+                ScopeBranch::Derive,
+                ResourceKeyKind::Purchase,
+                "303db7060cebd6278150218289e5bb9ecd65911c8cd40485d349d3cbd8ea8496",
+                "jcqa5t4zziavwq2amwucgseula",
+            ),
+            (
+                ScopeBranch::Inherit,
+                ResourceKeyKind::Independent,
+                "f2b18481bde1c852812fa6f0f9da7ee846e5f57acdef0147aacdd7309f046b92",
+                "qojty53pzdlbmbyeqf7mndouei",
+            ),
+            (
+                ScopeBranch::Inherit,
+                ResourceKeyKind::Purchase,
+                "a79a6306c722bff483424f87aaa5001f3f37e3c115ba70fcce7bbb0c54db1306",
+                "mu2sgxydi4vzyxyh26jhymovqi",
+            ),
+        ];
+
+        for (branch, kind, expected_key, expected_url) in cases {
+            let (scope, _) = scope_key(&base, SCOPE, branch);
+            let key = resource_key(&scope, kind, RESOURCE);
+            assert_eq!(hex(&key), expected_key, "{branch:?} {kind:?}");
+            assert_eq!(
+                derive_url(&key, RESOURCE),
+                expected_url,
+                "{branch:?} {kind:?}"
+            );
+        }
+    }
 }

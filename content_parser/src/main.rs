@@ -61,5 +61,7 @@ async fn main() {
         resource_count += resources.len();
     }
 
-    println!("manifest OK: {puzzle_count} puzzle(s), {resource_count} resource(s) parsed and built");
+    println!(
+        "manifest OK: {puzzle_count} puzzle(s), {resource_count} resource(s) parsed and built"
+    );
 }
