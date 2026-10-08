@@ -153,7 +153,7 @@ pub fn check(files: &[(PathBuf, String)]) -> Vec<Problem> {
 
         for (index, answer) in p.behavior.answer.iter().enumerate() {
             let answer_no = index + 1;
-            for patch in &answer.patch {
+            for patch in &answer.patches {
                 if !patches.contains(patch) {
                     report(
                         p.file,
@@ -173,7 +173,7 @@ pub fn check(files: &[(PathBuf, String)]) -> Vec<Problem> {
                     );
                 }
             }
-            for target in answer.unlocks.iter().chain(&answer.solves) {
+            for target in answer.unlocks.iter().chain(&answer.solve) {
                 if !puzzles.contains_key(target) {
                     report(
                         p.file,
