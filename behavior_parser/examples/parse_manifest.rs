@@ -46,15 +46,15 @@ fn main() {
     ));
 
     assert_eq!(behavior.answer[0].answer, "more-content");
-    assert_eq!(behavior.answer[0].patch, vec![902]);
+    assert_eq!(behavior.answer[0].patches, vec![902]);
 
     assert_eq!(behavior.answer[1].answer, "more-test");
-    assert_eq!(behavior.answer[1].patch, vec![908]);
+    assert_eq!(behavior.answer[1].patches, vec![908]);
     assert_eq!(
         behavior.answer[1].normalization.as_deref(),
         Some("trim_lowercase")
     );
-    assert_eq!(behavior.answer[1].solves, Some(1));
+    assert_eq!(behavior.answer[1].solve, Some(1));
     assert_eq!(behavior.answer[1].unlocks, vec![910]);
     assert_eq!(behavior.answer[1].grants, vec![902]);
 

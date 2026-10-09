@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// One `[[answer]]` entry. Unknown keys are rejected, so a typo'd key
 /// fails the grammar check instead of silently reading as its default.
-/// 
+///
 /// Field naming convention: single for `T` or `Option<T>`, plural for `Vec<T>`
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -35,9 +35,9 @@ mod tests {
 
     #[test]
     fn rejects_unknown_keys() {
-        let err = toml::from_str::<Answer>("answer = \"x\"\nsolve = 1").unwrap_err();
-        assert!(err.to_string().contains("unknown field `solve`"), "{err}");      
-        let err = toml::from_str::<Answer>("answer = \"x\"\nunlockes = [3,5]").unwrap_err();
-        assert!(err.to_string().contains("unknown field `unlockes`"), "{err}");
+        let err = toml::from_str::<Answer>("answer = \"x\"\nsolves = 1").unwrap_err();
+        assert!(err.to_string().contains("unknown field `solves`"), "{err}");
+        let err = toml::from_str::<Answer>("answer = \"x\"\nunlock = [3,5]").unwrap_err();
+        assert!(err.to_string().contains("unknown field `unlock`"), "{err}");
     }
 }

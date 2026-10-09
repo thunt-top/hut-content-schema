@@ -19,4 +19,4 @@ Hide = ["content", "content-a"]
 [[answer]]
 answer = "more-test"
 message = "check for the extra hint!"
-patch = [202]
+patches = [202]

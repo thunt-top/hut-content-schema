@@ -18,4 +18,4 @@ Insert = ["content", "content-b", 102]
 [[answer]]
 answer = "more-content"
 message = "check for the extra content!"
-patch = [102]
+patches = [102]

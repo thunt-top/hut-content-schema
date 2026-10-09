@@ -270,10 +270,10 @@ Replace = ["content", "body", 101, 102]
 
 [[answer]]
 answer = "SECRET-ANSWER"
-patch = [7]
+patches = [7]
 grants = [103]
 unlocks = [2]
-solves = 1
+solve = 1
 "#;
 
     const PUZZLE_2: &str = r#"
@@ -312,11 +312,11 @@ title = "Two"
 
     #[test]
     fn rejects_unknown_nested_keys_through_the_parsers() {
-        let typo = PUZZLE_1.replace("solves = 1", "solve = 1");
+        let typo = PUZZLE_1.replace("solve = 1", "solves = 1");
         let problems = messages(&[&typo, PUZZLE_2]);
         assert_eq!(problems.len(), 1, "{problems:?}");
         assert!(
-            problems[0].contains("unknown field `solve`"),
+            problems[0].contains("unknown field `solves`"),
             "{problems:?}"
         );
     }
@@ -324,7 +324,7 @@ title = "Two"
     #[test]
     fn reports_every_dangling_reference() {
         let broken = PUZZLE_1
-            .replace("patch = [7]", "patch = [8]")
+            .replace("patches = [7]", "patches = [8]")
             .replace("grants = [103]", "grants = [104]")
             .replace("unlocks = [2]", "unlocks = [3]")
             .replace(

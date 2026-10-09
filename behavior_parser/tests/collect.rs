@@ -36,7 +36,7 @@ fn walks_multiple_puzzles_and_round_trips_generated_behavior_toml() {
         [PatchOp::Insert(PatchDomain::Content,name, id)] if name == "content-b" && *id == 102
     ));
     assert_eq!(puzzle_a.answer[0].answer, "more-content");
-    assert_eq!(puzzle_a.answer[0].patch, vec![102]);
+    assert_eq!(puzzle_a.answer[0].patches, vec![102]);
 
     let puzzle_b = &reparsed.puzzle[1];
     assert_eq!(puzzle_b.patch[0].patch_id, 202);
@@ -45,5 +45,5 @@ fn walks_multiple_puzzles_and_round_trips_generated_behavior_toml() {
         matches!(&puzzle_b.patch[0].op[0], PatchOp::Hide(PatchDomain::Content, name) if name == "content-a")
     );
     assert_eq!(puzzle_b.answer[0].answer, "more-test");
-    assert_eq!(puzzle_b.answer[0].patch, vec![202]);
+    assert_eq!(puzzle_b.answer[0].patches, vec![202]);
 }
