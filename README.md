@@ -224,3 +224,30 @@ Since neither crate depends on anything outside this directory, both suites
 — i.e. the full grammar check for both the behavior and content sides of a
 manifest edit — run from right here with no other part of the workspace
 checked out.
+
+## Generating test vectors for frontend
+
+The `build_test_vectors` example builds the synthetic fixture manifest (the
+same one `tests/build.rs` round-trips) against a `MockVersionRegistry`,
+encrypts each independently-keyed resource, and writes
+`content_parser/tests/fixtures/test_vectors.json` — three maps keyed the way
+a frontend client consumes them:
+
+- `urls`: `<url_prefix>_<version>` (the object key a client fetches) → the
+  base64 ciphertext blob as served,
+- `keys`: `resource_id` → `{version, key}` (base64 AES-256-GCM key),
+- `contents`: `resource_id` → `{raw_content, blake3}`, the expected plaintext
+  and its digest once a correct decrypt + gunzip is applied.
+
+The frontend keeps its own copy of that file (`hut_front/src/utils/
+__fixtures__/test_vectors.json`) and its `contentCrypto.test.ts` exercises the
+full decrypt path end-to-end against it, no backend or bucket running.
+Regenerate here after a schema/manifest change and copy the result across:
+
+```bash
+cargo run -p content_parser --example build_test_vectors
+```
+
+Note the ciphertext in `urls` changes every run (AES-GCM's nonce is random),
+while `keys` and `contents` are deterministic — so a manifest-only or
+field-name change shows up purely in `contents`.
